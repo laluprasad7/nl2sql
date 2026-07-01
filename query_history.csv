@@ -1,0 +1,329 @@
+date,time,user,question,sql,rows,error
+6/24/2026,15:08:34,lalup,hi give simple query on given table,,0,"Could not generate a valid query after 3 attempts.
+Attempt 1: SQL syntax error: Invalid expression / Unexpected token. Line 1, Col: 16.
+  Sure! To [4mprovide[0m a simple query, I'll need to know which specific table you're interested in. Could you please speci
+Attempt 2: Query references table(s) not in the provided schema: FINGATE_ENTITYDETAIL.
+Attempt 3: Query references table(s) not in the provided schema: FINGATE_ENTITYDETAIL."
+6/25/2026,15:40:01,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,,0,"Could not generate a valid query after 3 attempts.
+Attempt 1: Query references table(s) not in the provided schema: BANKS, COUNTRIES, TRANSACTIONS.
+Attempt 2: Query references table(s) not in the provided schema: BANKS, COUNTRIES, TRANSACTIONS.
+Attempt 3: Query references table(s) not in the provided schema: BANKS, COUNTRIES, TRANSACTIONS."
+6/25/2026,16:03:17,lalup,hey give a simple sql query just  testing purpose,,0,"Could not generate a valid query after 3 attempts.
+Attempt 1: Query references table(s) not in the provided schema: FINGATE_ENTITYDETAIL.
+Attempt 2: Query references table(s) not in the provided schema: FINGATE_ENTITYDETAIL.
+Attempt 3: Query references table(s) not in the provided schema: FINGATE_ENTITYDETAIL."
+6/25/2026,16:04:21,lalup,hey give a simple sql query just  testing purpose,"SELECT TOP 500 *
+FROM fingate_EntityDetail
+WHERE customerType = 'company'",0,"Database error after 3 attempts: Conversion Error: Could not convert string 'company' to INT64
+
+LINE 1: SELECT * FROM fingate_EntityDetail WHERE customerType = 'company' LIMIT 500
+                                                                ^"
+6/25/2026,16:15:37,lalup,show 5 country names with their ISO codes,"SELECT name, isoCode
+FROM finnet_Country
+LIMIT 5",5,
+6/29/2026,11:13:58,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,,0,"Ollama request failed: HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=120)"
+6/29/2026,11:16:03,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,,0,"Could not generate a valid query after 2 attempts.
+Attempt 1: Query references table(s) not in the provided schema: FINNET_COUNTRY, TRANSACTIONS.
+Attempt 2: Query references table(s) not in the provided schema: FINNET_COUNTRY, TRANSACTIONS."
+6/29/2026,11:18:09,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,,0,"Could not generate a valid query after 2 attempts.
+Attempt 1: Query references table(s) not in the provided schema: YOUR_TRANSACTION_TABLE.
+Attempt 2: Query references table(s) not in the provided schema: YOUR_TRANSACTION_TABLE."
+6/29/2026,12:16:19,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,,0,Ollama request failed: 500 Server Error: Internal Server Error for url: http://localhost:11434/api/generate
+6/29/2026,12:18:15,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,"WITH recent_transactions AS (
+    SELECT *
+    FROM fingate_AccountDetail
+    WHERE amount > 1000000 -- 10 lakh INR
+      AND transaction_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+),
+high_risk_countries AS (
+    SELECT country_code
+    FROM finnet_Country
+    WHERE is_high_risk = TRUE
+),
+filtered_transactions AS (
+    SELECT *
+    FROM recent_transactions rt
+    JOIN high_risk_countries hrc ON rt.beneficiary_country = hrc.country_code
+),
+grouped_transactions AS (
+    SELECT 
+        sender_bank,
+        beneficiary,
+        SUM(amount) AS total_amount_received
+    FROM filtered_transactions
+    GROUP BY sender_bank, beneficiary
+)
+SELECT *
+FROM grouped_transactions
+ORDER BY total_amount_received DESC
+LIMIT 10",0,"Database error after 2 attempts: Catalog Error: Scalar Function with name curdate does not exist!
+Did you mean ""current_date""?
+
+LINE 1: ... amount > 1000000 /* 10 lakh INR */ AND transaction_date >= CURDATE() - INTERVAL '30' DAY), high_risk_countries AS ...
+                                                                       ^"
+2026-06-29,12:33:19,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,"WITH recent_transactions AS (
+    SELECT *
+    FROM fingate_AccountDetail
+    WHERE amount > 1000000 -- 10 lakh INR
+      AND transaction_date >= DATEADD(day, -30, GETDATE())
+),
+high_risk_countries AS (
+    SELECT country_code
+    FROM finnet_Country
+    WHERE is_high_risk = TRUE
+),
+filtered_transactions AS (
+    SELECT *
+    FROM recent_transactions rt
+    JOIN high_risk_countries hrc ON rt.beneficiary_country = hrc.country_code
+),
+grouped_transactions AS (
+    SELECT 
+        sender_bank,
+        beneficiary,
+        SUM(amount) AS total_amount_received
+    FROM filtered_transactions
+    GROUP BY sender_bank, beneficiary
+)
+SELECT *
+FROM grouped_transactions
+ORDER BY total_amount_received DESC
+LIMIT 10",0,"Database error after 3 attempts: Binder Error: Referenced column ""amount"" not found in FROM clause!
+Candidate bindings: ""accountType"", ""accountNumber"", ""accountStatus"", ""reasonActFreeze"", ""acClosingDate""
+
+LINE 1: ...transactions AS (SELECT * FROM fingate_AccountDetail WHERE amount > 1000000 /* 10 lakh INR */ AND transaction_date...
+                                                                      ^"
+2026-06-29,12:39:23,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,"WITH high_risk_countries AS (
+    SELECT country_code
+    FROM fincore_bridge.fingate_EntityDetail
+    WHERE country IN ('Country1', 'Country2', 'Country3') -- Replace with actual high-risk countries
+),
+filtered_transactions AS (
+    SELECT 
+        sender_bank,
+        beneficiary,
+        SUM(amount) AS total_amount
+    FROM 
+        fingate_AccountDetail
+    WHERE 
+        amount > 1000000 -- 10 lakh INR
+        AND transaction_date >= DATEADD(day, -30, GETDATE())
+        AND beneficiary IN (SELECT country_code FROM high_risk_countries)
+    GROUP BY 
+        sender_bank, beneficiary
+),
+top_10_beneficiaries AS (
+    SELECT 
+        sender_bank,
+        beneficiary,
+        total_amount
+    FROM 
+        filtered_transactions
+    ORDER BY 
+        total_amount DESC
+    OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
+)
+
+SELECT * FROM top_10_beneficiaries",0,"Database error after 6 attempts: Binder Error: Referenced column ""country_code"" not found in FROM clause!
+Candidate bindings: ""country"", ""kycFormatCode"", ""otherCustType"", ""companyWebsite"", ""regCountry""
+
+LINE 1: WITH high_risk_countries AS (SELECT country_code FROM fincore_bridge.fingate_EntityDetail WHERE...
+                                            ^"
+2026-06-30,11:40:55,lalup,"find the all transaction from china with sender id, benificiary id, and the amout and date and time","SELECT 
+    t.transactionId,
+    t.trasactionTime,
+    t.transactionDate,
+    t.amountInTxCurrency AS amount,
+    s.senderIdentifierAcNo AS sender_id,
+    b.beneficiaryIdentifierAcNo AS beneficiary_id
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+JOIN 
+    [FIUMetaHub].[finnet_Country] c ON t.originCountry = c.id_
+JOIN 
+    [FIUMetaHub].[finnet_Country] b_c ON t.destinationCountry = b_c.id_
+WHERE 
+    c.name = 'China'",0,"Database error after 6 attempts: Binder Error: Referenced table ""s"" not found!
+Candidate tables: ""b_c""
+
+LINE 1: ...onTime, t.transactionDate, t.amountInTxCurrency AS amount, s.senderIdentifierAcNo AS sender_id, b.beneficiaryIdentifie...
+                                                                      ^"
+2026-06-30,11:55:28,lalup,"find the all transaction from china to india with sender id,sender name, benificiary name, and the amout ,date and time","SELECT 
+    t.transactionId,
+    t.trasactionTime,
+    t.senderIdentifierAcNo AS senderID,
+    t.senderName,
+    t.benificiaryName,
+    t.amountInTxCurrency AS amount,
+    t.transactionDate
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+JOIN 
+    [FIUMetaHub].[finnet_Country] c ON t.originCountry = c.id_
+WHERE 
+    t.originCountry = 40 -- China
+    AND t.destinationCountry = 100 -- India",12,
+2026-06-30,12:00:03,lalup,"find the all transaction from china, uae, america to india with sender id,sender name, benificiary name, and the amout ,date and time also show the origin county and destination county","SELECT 
+    t.transactionId,
+    t.transactionDate,
+    t.trasactionTime,
+    t.amountInTxCurrency AS amount,
+    t.senderIdentifierAcNo AS sender_id,
+    t.senderName AS sender_name,
+    t.benificiaryName AS beneficiary_name,
+    t.originCountry AS origin_country,
+    t.destinationCountry AS destination_country
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+JOIN 
+    [FIUMetaHub].[finnet_Country] c ON t.originCountry = c.id_
+WHERE 
+    (t.originCountry = 40 OR t.originCountry = 50 OR t.originCountry = 60) -- UAE, USA, India
+    AND t.destinationCountry = 100",24,
+2026-06-30,16:26:29,lalup,"find the all transaction from china, uae, america to india with sender id,sender name, benificiary name, and the amout ,date and time also show the origin county and destination county",,0,"Could not generate a valid query after 3 attempts. Tip: make sure the table(s) your question is about are selected in the sidebar (e.g. fingate_CbwtrBank for transactions).
+Attempt 1: Query references table(s) not in the provided schema: FINGATE_TRANSACTIONS. Use ONLY these tables: fingate_AccountDetail, fingate_CbwtrBank, fingate_EntityDetail, fingate_KycSummary, finnet_Country, finnet_Currency.
+Attempt 2: Query references table(s) not in the provided schema: FINGATE_TRANSACTIONS. Use ONLY these tables: fingate_AccountDetail, fingate_CbwtrBank, fingate_EntityDetail, fingate_KycSummary, finnet_Country, finnet_Currency.
+Attempt 3: Query references table(s) not in the provided schema: FINGATE_TRANSACTIONS. Use ONLY these tables: fingate_AccountDetail, fingate_CbwtrBank, fingate_EntityDetail, fingate_KycSummary, finnet_Country, finnet_Currency."
+2026-06-30,16:28:06,lalup,"find the all transaction from china, uae, america to india with sender id,sender name, benificiary name, and the amout ,date and time also show the origin county and destination county","SELECT 
+    t.transactionId,
+    t.trasactionTime,
+    t.transactionDate,
+    t.amountInTxCurrency AS amount,
+    t.senderIdentifierAcNo AS sender_id,
+    t.senderName AS sender_name,
+    t.benificiaryName AS beneficiary_name,
+    t.originCountry,
+    t.destinationCountry
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+JOIN 
+    [FIUMetaHub].[finnet_Country] c ON t.originCountry = c.id_
+WHERE 
+    (t.originCountry IN (40, 50, 60) AND t.destinationCountry = 100)",24,
+2026-06-30,16:29:13,lalup,"find the all transaction from china, uae, america to india with sender id,sender name, benificiary name, and the amout ,date and time also show the origin county and destination county","SELECT 
+    t.transactionId,
+    t.transactionDate,
+    t.trasactionTime,
+    t.amountInTxCurrency AS amount,
+    t.senderIdentifierAcNo AS sender_id,
+    t.senderName AS sender_name,
+    t.beneficiaryAcNo AS beneficiary_id,
+    t.benificiaryName AS beneficiary_name,
+    t.originCountry AS origin_country,
+    t.destinationCountry AS destination_country
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+WHERE 
+    (t.originCountry = 40 OR t.originCountry = 50 OR t.originCountry = 60)
+    AND t.destinationCountry = 100",12,
+2026-06-30,16:30:18,lalup,"find the all transaction from china, uae, america to india with sender id,sender name, benificiary name, and the amout ,date and time also show the origin county and destination county","SELECT 
+    t.transactionId,
+    t.transactionDate,
+    t.trasactionTime,
+    t.amountInTxCurrency AS amount,
+    t.senderIdentifierAcNo AS sender_id,
+    t.senderName AS sender_name,
+    t.beneficiaryAcNo AS beneficiary_id,
+    t.benificiaryName AS beneficiary_name,
+    t.originCountry,
+    t.destinationCountry
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+WHERE 
+    (t.originCountry = 40 OR t.originCountry = 50 OR t.originCountry = 60)
+    AND t.destinationCountry = 100",12,
+2026-06-30,16:30:54,lalup,"find the all transaction from china, uae, america to india with sender id,sender name, benificiary name, and the amout ,date and time also show the origin county and destination county","SELECT 
+    t.transactionId,
+    t.transactionDate,
+    t.trasactionTime,
+    t.amountInTxCurrency AS amount,
+    t.senderIdentifierAcNo AS sender_id,
+    t.senderName AS sender_name,
+    t.beneficiaryAcNo AS beneficiary_id,
+    t.benificiaryName AS beneficiary_name,
+    t.originCountry,
+    t.destinationCountry
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+WHERE 
+    (t.originCountry = 40 OR t.originCountry = 50 OR t.originCountry = 60)
+    AND t.destinationCountry = 100",12,
+2026-06-30,16:47:05,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,"SELECT 
+    t.senderBankOrBic AS SenderBank,
+    SUM(t.amountInInr) / 100000.0 AS TotalAmountInLakh,
+    COUNT(t.transactionId) AS TransactionCount
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+WHERE 
+    t.transactionDate >= DATEADD(DAY, -30, GETDATE())
+    AND t.amountInInr > 10000000
+    AND (t.destinationCountry = 40 OR t.destinationCountry = 50)
+GROUP BY 
+    t.senderBankOrBic
+ORDER BY 
+    TotalAmountInLakh DESC,
+    TransactionCount DESC
+LIMIT 10",0,
+2026-06-30,16:49:31,lalup,Show all transactions above 10 lakh INR from the last 30 days,"SELECT 
+    transactionId,
+    transactionDate,
+    trasactionTime,
+    txCurrencyCode,
+    amountInInr,
+    amountInTxCurrency,
+    originCountry,
+    institution,
+    destinationCountry,
+    senderName,
+    indentifierType,
+    senderIdentifierAcNo,
+    senderBankOrBic,
+    senderAddressLine1,
+    senderCountry,
+    senderPinCode,
+    senderLocality,
+    senderState,
+    senderDistrict,
+    senderCityVillageTown,
+    benificiaryName,
+    beneficiaryBankOrBic,
+    beneficiaryAcNo,
+    beneficiaryIdentifierType,
+    beneficiaryIdentifierAcNo,
+    benAddressLine1,
+    benCountry,
+    benPinCode,
+    benLocality,
+    benState,
+    benDistrict,
+    benCityVillageTown,
+    rbiCode,
+    swiftMessageText,
+    swiftMessageCode,
+    senderCorresBankOrBic,
+    beneficiaryCorresBankOrBic,
+    thirdReimInstBankOrBic,
+    intermediaryInstBankOrBic,
+    reportId,
+    batchId
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank]
+WHERE 
+    amountInInr > 1000000
+    AND transactionDate >= DATEADD(DAY, -30, GETDATE())",0,
+2026-06-30,16:54:22,lalup,Show all transactions above 10 lakh INR from the last 30 days Which sender banks sent the most wires to high-risk countries? top 10 beneficiaries by total amount received,"SELECT 
+    t.senderBankOrBic AS SenderBank,
+    SUM(t.amountInInr) / 100000.0 AS TotalAmountInLakh,
+    COUNT(t.transactionId) AS TransactionCount
+FROM 
+    [FINCORE_BRIDGE].[fingate_CbwtrBank] t
+WHERE 
+    t.transactionDate >= DATEADD(DAY, -30, GETDATE())
+    AND t.amountInInr > 1000000
+    AND (t.destinationCountry = 40 OR t.destinationCountry = 50)
+GROUP BY 
+    t.senderBankOrBic
+ORDER BY 
+    TotalAmountInLakh DESC,
+    TransactionCount DESC
+LIMIT 10",0,
