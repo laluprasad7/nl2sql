@@ -1,0 +1,23 @@
+Show me all wire transfers where the amount in INR is more than 50 lakhs in the last 30 days
+Which countries are we receiving the most wires from this month, give me a count
+List all transactions where the sender bank BIC is not available or is blank
+Give me all wires sent to China or Russia in the last 3 months along with the sender name and amount
+Show transactions where the sender country and the origin country are different — these could be suspicious
+How many cross border wires came in yesterday and what was the total amount in INR
+Find all transactions linked to report ID 10045
+Show me all wires where the SWIFT message code is MT103 and amount is above 1 crore INR
+Which beneficiary account numbers have received more than 5 transactions in the last 7 days
+List all transactions where sender name contains 'trading' or 'enterprises' and amount is above 20 lakhs
+
+
+
+fingate_EntityDetail "Show me all entities whose KYC has not been refreshed in the last 2 years"
+(fingate_EntityDetail) "Give me all companies where UBO details are not available and their risk level is high"
+(fingate_EntityDetail) "List all entities that have FCRA registration and have received foreign wires"
+(fingate_EntityDetail) "Show all sole proprietor firms where the owner UCIC is missing"
+(fingate_KycSummary) "Give me all customers whose declared annual income is less than 2 lakhs but their risk rating is high"
+(fingate_KycSummary) "Show all KYC records where PAN is not available"
+(fingate_AccountDetail) "List all accounts that are currently frozen and show me the reason for freeze"
+(fingate_AccountDetail) "Find accounts where total cash deposit is more than 10 lakhs but the account was opened less than 6 months ago"
+(fingate_AccountPerson) "Show all non-customer walk-ins linked to accounts with more than 3 transactions"
+(fingate_Gos) "Give me all GOS records where the attempted transaction flag is yes and status is still pending"
