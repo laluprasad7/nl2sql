@@ -52,7 +52,8 @@ for k, v in {
         st.session_state[k] = v
 
 # Schema is always available — no DB fetch needed
-ALL_TABLES = static_schema.get_all_tables()
+# ALL_TABLES = static_schema.get_all_tables()
+ALL_TABLES = [r["table"] for r in db.load_report() if not r["error"]]
 
 
 # ── Embedding index (loads MiniLM + builds/loads Chroma; cached once) ──────────
@@ -103,8 +104,8 @@ with st.sidebar:
     missing  = [r for r in report if r["error"]]
     total_rows = sum(r["rows"] for r in loaded)
     st.caption(
-        f"{len(loaded)}/{len(report)} tables loaded · {total_rows:,} rows "
-        f"(DuckDB, in-memory)"
+        f"{len(loaded)}/{len(report)} tables loaded"
+        # f"(DuckDB, in-memory)"
     )
     if missing:
         with st.expander(f"⚠️ {len(missing)} table(s) not loaded", expanded=False):
@@ -118,7 +119,7 @@ with st.sidebar:
 
     # ── Ollama check ───────────────────────────────────────────────────────
     st.subheader("Model")
-    if st.button("Check Ollama", use_container_width=True):
+    if st.button("Check model", use_container_width=True):
         with st.spinner("Checking…"):
             ok, msg = check_ollama()
         if ok:
@@ -132,26 +133,27 @@ with st.sidebar:
     st.subheader("Tables in context")
     st.caption(f"{len(ALL_TABLES)} tables available from static schema")
 
-    filter_txt = st.text_input("Filter", placeholder="type to search…",
-                               label_visibility="collapsed")
-    visible = [t for t in ALL_TABLES if filter_txt.lower() in t.lower()] \
-              if filter_txt else ALL_TABLES
 
     c1, c2 = st.columns(2)
     c1.button("All",   use_container_width=True, on_click=_select_all)
     c2.button("Clear", use_container_width=True, on_click=_clear_all)
 
+
+
     selected_tables: list[str] = st.multiselect(
         "Tables",
         options=ALL_TABLES,
-        key="table_select",
+        default=st.session_state.get("_sel", []),
+        placeholder="Search and select tables…",
         label_visibility="collapsed",
+        key="table_multiselect",
     )
-
+    st.session_state["_sel"] = selected_tables
+ 
     if selected_tables:
         total_cols = sum(len(static_schema.SCHEMA[t]) for t in selected_tables)
         st.caption(f"{len(selected_tables)} table(s) · {total_cols} columns in prompt")
-
+ 
     st.divider()
 
     # ── Extra glossary ─────────────────────────────────────────────────────
@@ -202,7 +204,8 @@ question = st.text_area(
 # ── Semantic table suggestions (reactive) ──────────────────────────────────────
 if EMBED_OK and question.strip():
     try:
-        scored = embedder.suggest_tables_with_scores(question.strip(), max_tables=3)
+        scored = embedder.suggest_tables_with_scores(question.strip(), max_tables=len(ALL_TABLES))
+        scored = [(t, s) for t, s in scored if t in ALL_TABLES][:3]
     except Exception:  # noqa: BLE001
         scored = []
     if scored:
@@ -233,7 +236,7 @@ if not selected_tables:
 # ── Execute ───────────────────────────────────────────────────────────────────
 if run_clicked and question.strip() and selected_tables:
     with st.status("Generating SQL…", expanded=True) as status_box:
-        st.write("📡 Sending to Qwen 2.5 Coder via Ollama…")
+        st.write("Waiting for response..")
         t0 = time.time()
 
         result = run_query_pipeline(
@@ -322,5 +325,4 @@ elif st.session_state.last_result and not run_clicked:
         st.dataframe(r.dataframe, use_container_width=True, height=380)
 
 st.divider()
-st.caption("Read-only · MAX 500 rows · Validated & transpiled before execution · "
-           "DuckDB engine · Qwen 2.5 Coder via Ollama")
+st.caption("Read-only · MAX 500 rows · Validated & transpiled before execution .")
