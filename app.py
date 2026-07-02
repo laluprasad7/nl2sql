@@ -159,7 +159,6 @@ with st.sidebar:
     # ── Extra glossary ─────────────────────────────────────────────────────
     with st.expander("Extra glossary hints", expanded=False):
         st.caption(
-            "The tool auto-generates a glossary from the schema metadata.\n"
             "Add any extra hints here (e.g. country code mappings, business rules)."
         )
         st.session_state.extra_glossary = st.text_area(
