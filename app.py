@@ -40,7 +40,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── Session state ─────────────────────────────────────────────────────────────
+# Session state 
 for k, v in {
     "last_result":    None,
     "history":        [],
@@ -51,12 +51,11 @@ for k, v in {
     if k not in st.session_state:
         st.session_state[k] = v
 
-# Schema is always available — no DB fetch needed
 # ALL_TABLES = static_schema.get_all_tables()
 ALL_TABLES = [r["table"] for r in db.load_report() if not r["error"]]
 
 
-# ── Embedding index (loads MiniLM + builds/loads Chroma; cached once) ──────────
+# Embedding index (loads MiniLM + builds/loads Chroma; cached once)
 @st.cache_resource(show_spinner="Preparing semantic table search…")
 def _init_embedder() -> str:
     return embedder.initialise(static_schema.COLUMN_META)
@@ -78,18 +77,6 @@ def log_history_to_csv(record, filename="query_history.csv"):
         if not file_exists:
             writer.writeheader()
         writer.writerow(record)
-
-
-# ── Callbacks for the table selector ───────────────────────────────────────────
-def _apply_suggested(tables: list[str]) -> None:
-    st.session_state.table_select = [t for t in tables if t in ALL_TABLES]
-
-def _select_all() -> None:
-    st.session_state.table_select = list(ALL_TABLES)
-
-def _clear_all() -> None:
-    st.session_state.table_select = []
-
 
 # ═════════════════════════════════════════════════════════════════════════════
 #  SIDEBAR
@@ -131,29 +118,37 @@ with st.sidebar:
 
     # ── Table selector ─────────────────────────────────────────────────────
     st.subheader("Tables in context")
-    st.caption(f"{len(ALL_TABLES)} tables available from static schema")
+    st.caption(f"{len(ALL_TABLES)} tables available")
 
+    # Callbacks — write directly to the widget's own key
+    def _select_all():
+        st.session_state["table_multiselect"] = list(ALL_TABLES)
 
+    def _clear_all():
+        st.session_state["table_multiselect"] = []
+
+    def _apply_suggested():
+        st.session_state["table_multiselect"] = [
+            t for t in st.session_state.suggested_tables if t in ALL_TABLES
+        ]
+    
+    
     c1, c2 = st.columns(2)
     c1.button("All",   use_container_width=True, on_click=_select_all)
     c2.button("Clear", use_container_width=True, on_click=_clear_all)
 
-
-
     selected_tables: list[str] = st.multiselect(
         "Tables",
         options=ALL_TABLES,
-        default=st.session_state.get("_sel", []),
         placeholder="Search and select tables…",
         label_visibility="collapsed",
         key="table_multiselect",
     )
-    st.session_state["_sel"] = selected_tables
- 
+
     if selected_tables:
         total_cols = sum(len(static_schema.SCHEMA[t]) for t in selected_tables)
         st.caption(f"{len(selected_tables)} table(s) · {total_cols} columns in prompt")
- 
+
     st.divider()
 
     # ── Extra glossary ─────────────────────────────────────────────────────
@@ -187,7 +182,7 @@ with st.sidebar:
 #  MAIN
 # ═════════════════════════════════════════════════════════════════════════════
 st.title("🔍 CBWT Query Studio")
-st.caption("Ask in plain English — SQL is generated and run locally on DuckDB.")
+st.caption("Ask — SQL is generated and run locally")
 
 question = st.text_area(
     "Your question",
@@ -214,11 +209,11 @@ if EMBED_OK and question.strip():
             pills = " ".join(f"<span class='pill'>{t}</span>" for t in suggested)
             st.markdown(f"**Suggested tables:** {pills}", unsafe_allow_html=True)
         with btn_col:
+            st.session_state["suggested_tables"] = [t for t, _ in scored]
             st.button(
                 "✦ Use suggested",
                 use_container_width=True,
                 on_click=_apply_suggested,
-                args=(suggested,),
             )
         with st.expander("Confidence", expanded=False):
             max_score = max(s for _, s in scored) or 1.0
