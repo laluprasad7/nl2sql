@@ -18,9 +18,9 @@ METADATA per column (for semantic search / glossary injection):
 
 from __future__ import annotations
 
-# ══════════════════════════════════════════════════════════════════════════════
+####################################################################
 #  SCHEMA — raw column definitions (mirrors CREATE TABLE statements)
-# ══════════════════════════════════════════════════════════════════════════════
+####################################################################
 
 SCHEMA: dict[str, list[dict]] = {
 
@@ -35,7 +35,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "institution",                   "type": "nvarchar",   "nullable": "YES", "max_length": 100},
         {"column": "destinationCountry",            "type": "bigint",     "nullable": "YES", "max_length": None},
         {"column": "senderName",                    "type": "nvarchar",   "nullable": "YES", "max_length": 100},
-        {"column": "indentifierType",               "type": "nvarchar",   "nullable": "YES", "max_length": 30},
+        {"column": "indentifierType",               "type": "nvarchar",   "nullable": "YES", "max_length": 30, "values":['Passport', 'PAN', 'Aadhaar', 'Driving Licence', 'Voter ID', 'Others']},
         {"column": "senderIdentifierAcNo",          "type": "nvarchar",   "nullable": "YES", "max_length": 75},
         {"column": "senderBankOrBic",               "type": "nvarchar",   "nullable": "YES", "max_length": 100},
         {"column": "senderAddressLine1",            "type": "nvarchar",   "nullable": "YES", "max_length": 255},
@@ -49,7 +49,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "benificiaryBankOrBic",          "type": "nvarchar",   "nullable": "YES", "max_length": 100},
         {"column": "beneficiaryBankOrBic",          "type": "nvarchar",   "nullable": "YES", "max_length": 100},
         {"column": "beneficiaryAcNo",               "type": "nvarchar",   "nullable": "YES", "max_length": 50},
-        {"column": "beneficiaryIdentifierType",     "type": "nvarchar",   "nullable": "YES", "max_length": 20},
+        {"column": "beneficiaryIdentifierType",     "type": "nvarchar",   "nullable": "YES", "max_length": 20,"values":['Passport', 'PAN', 'Aadhaar', 'Driving Licence', 'Voter ID', 'Others']},
         {"column": "beneficiaryIdentifierAcNo",     "type": "nvarchar",   "nullable": "YES", "max_length": 75},
         {"column": "benAddressLine1",               "type": "nvarchar",   "nullable": "YES", "max_length": 300},
         {"column": "benCountry",                    "type": "bigint",     "nullable": "YES", "max_length": None},
@@ -69,7 +69,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "batchId",                       "type": "bigint",     "nullable": "YES", "max_length": None},
     ],
 
-    # ── fingate_Gos ───────────────────────────────────────────────────────────
+    # fingate_Gos
     "fingate_Gos": [
         {"column": "reportId",               "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "batchId",                "type": "bigint",    "nullable": "YES", "max_length": None},
@@ -88,15 +88,15 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "statusComment",          "type": "nvarchar",  "nullable": "YES", "max_length": 1024},
         {"column": "legacy_batch_id",        "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "legacy_report_id",       "type": "bigint",    "nullable": "YES", "max_length": None},
-        {"column": "migrated_flag",          "type": "char",      "nullable": "YES", "max_length": 1},
+        {"column": "migrated_flag",          "type": "char",      "nullable": "YES", "max_length": 1, "values": ['Y','N']},
         {"column": "legacy_re_id",           "type": "nvarchar",  "nullable": "YES", "max_length": 20},
         {"column": "job_id",                 "type": "nvarchar",  "nullable": "YES", "max_length": 20},
         {"column": "otherRedFlagInd",        "type": "nvarchar",  "nullable": "YES", "max_length": 500},
-        {"column": "attemptedTransaction",   "type": "nvarchar",  "nullable": "YES", "max_length": 5},
-        {"column": "trasactionNotAvailable", "type": "nvarchar",  "nullable": "YES", "max_length": 5},
+        {"column": "attemptedTransaction",   "type": "nvarchar",  "nullable": "YES", "max_length": 5,"values": ['Y','N']},
+        {"column": "trasactionNotAvailable", "type": "nvarchar",  "nullable": "YES", "max_length": 5,"values": ['Y','N']},
     ],
 
-    # ── finnet_Currency ───────────────────────────────────────────────────────
+    # finnet_Currency 
     "finnet_Currency": [
         {"column": "id_",          "type": "bigint",   "nullable": "NO",  "max_length": None},
         {"column": "countryName",  "type": "nvarchar", "nullable": "YES", "max_length": 100},
@@ -106,7 +106,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "countryCode",  "type": "nvarchar", "nullable": "YES", "max_length": 5},
     ],
 
-    # ── finnet_Country ────────────────────────────────────────────────────────
+    # finnet_Country 
     "finnet_Country": [
         {"column": "id_",         "type": "bigint",    "nullable": "NO",  "max_length": None},
         {"column": "name",        "type": "nvarchar",  "nullable": "YES", "max_length": 100},
@@ -117,16 +117,16 @@ SCHEMA: dict[str, list[dict]] = {
     ],
 
 
-    # ── fingate_KycSummary ────────────────────────────────────────────────────
+    # fingate_KycSummary 
     "fingate_KycSummary": [
-        {"column": "primaryEntity",       "type": "nvarchar",   "nullable": "YES", "max_length": 3},
+        {"column": "primaryEntity",       "type": "nvarchar",   "nullable": "YES", "max_length": 3,"values": ['Y','N','NA']},
         {"column": "customer",            "type": "nvarchar",   "nullable": "YES", "max_length": 150},
-        {"column": "entityType",          "type": "nvarchar",   "nullable": "YES", "max_length": 20},
+        {"column": "entityType",          "type": "nvarchar",   "nullable": "YES", "max_length": 20,"values": ['Individual', 'Proprietorship', 'Partnership', 'Company', 'Trust', 'NGO', 'HUF', 'Others']},
         {"column": "entityName",          "type": "nvarchar",   "nullable": "YES", "max_length": 604},
         {"column": "UCICID",              "type": "nvarchar",   "nullable": "YES", "max_length": 50},
         {"column": "PAN",                 "type": "nvarchar",   "nullable": "YES", "max_length": 10},
         {"column": "uniqueID",            "type": "nvarchar",   "nullable": "YES", "max_length": 500},
-        {"column": "risk",                "type": "nvarchar",   "nullable": "YES", "max_length": 10},
+        {"column": "risk",                "type": "nvarchar",   "nullable": "YES", "max_length": 10,"values": ['Low', 'Medium', 'High']},
         {"column": "profession",          "type": "nvarchar",   "nullable": "YES", "max_length": 500},
         {"column": "incomePerYear",       "type": "decimal",    "nullable": "YES", "max_length": None},
         {"column": "reportId",            "type": "bigint",     "nullable": "YES", "max_length": None},
@@ -137,7 +137,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "statusComment",       "type": "nvarchar",   "nullable": "YES", "max_length": 1024},
         {"column": "legacy_batch_id",     "type": "bigint",     "nullable": "YES", "max_length": None},
         {"column": "legacy_report_id",    "type": "bigint",     "nullable": "YES", "max_length": None},
-        {"column": "migrated_flag",       "type": "char",       "nullable": "YES", "max_length": 1},
+        {"column": "migrated_flag",       "type": "char",       "nullable": "YES", "max_length": 1,"values": ['Y','N']},
         {"column": "legacy_re_id",        "type": "varchar",    "nullable": "YES", "max_length": 20},
         {"column": "rcd_create_date",     "type": "datetime2",  "nullable": "YES", "max_length": None},
         {"column": "BATCHID",             "type": "bigint",     "nullable": "YES", "max_length": None},
@@ -145,11 +145,11 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "REPORTREFERENCENO",   "type": "varchar",    "nullable": "YES", "max_length": 75},
     ],
 
-    # ── fingate_AccountPerson ─────────────────────────────────────────────────
+    # fingate_AccountPerson 
     "fingate_AccountPerson": [
         {"column": "accountNo",           "type": "nvarchar",   "nullable": "YES", "max_length": 50},
         {"column": "relationTypeId",      "type": "bigint",     "nullable": "YES", "max_length": None},
-        {"column": "personType",          "type": "nvarchar",   "nullable": "YES", "max_length": 60},
+        {"column": "personType",          "type": "nvarchar",   "nullable": "YES", "max_length": 60,"values": ['Customer', 'NonCustomer', 'WalkIn', 'Entity']},
         {"column": "ucic",                "type": "nvarchar",   "nullable": "YES", "max_length": 30},
         {"column": "reportId",            "type": "bigint",     "nullable": "YES", "max_length": None},
         {"column": "nonCustomerName",     "type": "nvarchar",   "nullable": "YES", "max_length": 100},
@@ -157,13 +157,13 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "reportDataSetId",     "type": "bigint",     "nullable": "YES", "max_length": None},
         {"column": "legacy_batch_id",     "type": "bigint",     "nullable": "YES", "max_length": None},
         {"column": "legacy_report_id",    "type": "bigint",     "nullable": "YES", "max_length": None},
-        {"column": "migrated_flag",       "type": "char",       "nullable": "YES", "max_length": 1},
+        {"column": "migrated_flag",       "type": "char",       "nullable": "YES", "max_length": 1,"values":['Y','N']},
         {"column": "legacy_re_id",        "type": "nvarchar",   "nullable": "YES", "max_length": 20},
         {"column": "reportRefNo",         "type": "nvarchar",   "nullable": "YES", "max_length": 100},
-        {"column": "reportType",          "type": "nvarchar",   "nullable": "YES", "max_length": 50},
+        {"column": "reportType",          "type": "nvarchar",   "nullable": "YES", "max_length": 50,"values": ['STR', 'CTR', 'NTR', 'CBWTR']},
     ],
 
-    # ── fingate_AccountDetail ─────────────────────────────────────────────────
+    # fingate_AccountDetail 
     "fingate_AccountDetail": [
         {"column": "batchId",                  "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "reportId",                 "type": "bigint",    "nullable": "YES", "max_length": None},
@@ -172,7 +172,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "branchCode",               "type": "nvarchar",  "nullable": "YES", "max_length": 30},
         {"column": "acOpeningDate",            "type": "datetime2", "nullable": "YES", "max_length": None},
         {"column": "acClosingDate",            "type": "datetime2", "nullable": "YES", "max_length": None},
-        {"column": "accountStatus",            "type": "nvarchar",  "nullable": "YES", "max_length": 15},
+        {"column": "accountStatus",            "type": "nvarchar",  "nullable": "YES", "max_length": 15,"values":['Active', 'Dormant', 'Frozen', 'Closed', 'Inactive']},
         {"column": "status",                   "type": "int",       "nullable": "YES", "max_length": None},
         {"column": "statusByUserId",           "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "statusByUserName",         "type": "nvarchar",  "nullable": "YES", "max_length": 75},
@@ -180,7 +180,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "statusComment",            "type": "nvarchar",  "nullable": "YES", "max_length": 1024},
         {"column": "legacy_batch_id",          "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "legacy_report_id",         "type": "bigint",    "nullable": "YES", "max_length": None},
-        {"column": "migrated_flag",            "type": "char",      "nullable": "YES", "max_length": 1},
+        {"column": "migrated_flag",            "type": "char",      "nullable": "YES", "max_length": 1,"values":['Y','N']},
         {"column": "legacy_re_id",             "type": "nvarchar",  "nullable": "YES", "max_length": 20},
         {"column": "job_id",                   "type": "nvarchar",  "nullable": "YES", "max_length": 20},
         {"column": "rcd_create_date",          "type": "datetime2", "nullable": "YES", "max_length": None},
@@ -194,20 +194,20 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "totalCreditAmount",        "type": "varchar",   "nullable": "YES", "max_length": 100},
         {"column": "totalDebitAmt",            "type": "varchar",   "nullable": "YES", "max_length": 100},
         {"column": "reportRefNo",              "type": "nvarchar",  "nullable": "YES", "max_length": 100},
-        {"column": "reportType",               "type": "nvarchar",  "nullable": "YES", "max_length": 50},
+        {"column": "reportType",               "type": "nvarchar",  "nullable": "YES", "max_length": 50,"values": ['STR', 'CTR', 'NTR', 'CBWT']},
     ],
 
-    # ── fingate_EntityDetail ──────────────────────────────────────────────────
+    # fingate_EntityDetail 
     "fingate_EntityDetail": [
         {"column": "ucic",                          "type": "nvarchar",  "nullable": "YES", "max_length": 30},
         {"column": "name",                          "type": "nvarchar",  "nullable": "YES", "max_length": 100},
         {"column": "uniqueCompanyId",               "type": "nvarchar",  "nullable": "YES", "max_length": 21},
         {"column": "pan",                           "type": "nvarchar",  "nullable": "YES", "max_length": 10},
-        {"column": "panAvailability",               "type": "nvarchar",  "nullable": "YES", "max_length": 3},
+        {"column": "panAvailability",               "type": "nvarchar",  "nullable": "YES", "max_length": 3,"values":['Y', 'N', 'NA']},
         {"column": "tan",                           "type": "nvarchar",  "nullable": "YES", "max_length": 10},
         {"column": "gstin",                         "type": "nvarchar",  "nullable": "YES", "max_length": 15},
         {"column": "iec",                           "type": "nvarchar",  "nullable": "YES", "max_length": 20},
-        {"column": "iecAvailability",               "type": "nvarchar",  "nullable": "YES", "max_length": 3},
+        {"column": "iecAvailability",               "type": "nvarchar",  "nullable": "YES", "max_length": 3,"values":['Y', 'N', 'NA']},
         {"column": "pekrn",                         "type": "nvarchar",  "nullable": "YES", "max_length": 10},
         {"column": "telephoneNumber",               "type": "nvarchar",  "nullable": "YES", "max_length": 30},
         {"column": "mobileNumber",                  "type": "nvarchar",  "nullable": "YES", "max_length": 30},
@@ -221,7 +221,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "district",                      "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "cityVillageTown",               "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "linesOfBusiness",               "type": "nvarchar",  "nullable": "YES", "max_length": 200},
-        {"column": "fcraStatus",                    "type": "nvarchar",  "nullable": "YES", "max_length": 3},
+        {"column": "fcraStatus",                    "type": "nvarchar",  "nullable": "YES", "max_length": 3,"values":['Y', 'N', 'NA']},
         {"column": "fcraRegState",                  "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "fcraRegNumber",                 "type": "nvarchar",  "nullable": "YES", "max_length": 15},
         {"column": "regAddress",                    "type": "nvarchar",  "nullable": "YES", "max_length": 255},
@@ -235,9 +235,9 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "customerType",                  "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "lastkycDate",                   "type": "datetime2", "nullable": "YES", "max_length": None},
         {"column": "onboardingDate",                "type": "datetime2", "nullable": "YES", "max_length": None},
-        {"column": "customerRiskLevel",             "type": "nvarchar",  "nullable": "YES", "max_length": 7},
+        {"column": "customerRiskLevel",             "type": "nvarchar",  "nullable": "YES", "max_length": 7,"values":['Low', 'Medium', 'High', 'Very High']},
         {"column": "ubo",                           "type": "varchar",   "nullable": "YES", "max_length": 100},
-        {"column": "uboAvailability",               "type": "nvarchar",  "nullable": "YES", "max_length": 30},
+        {"column": "uboAvailability",               "type": "nvarchar",  "nullable": "YES", "max_length": 30,"values":['available', 'not available', 'not applicable']},
         {"column": "reportId",                      "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "batchId",                       "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "reportDataSetId",               "type": "bigint",    "nullable": "YES", "max_length": None},
@@ -255,7 +255,7 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "otherCustType",                 "type": "nvarchar",  "nullable": "YES", "max_length": 100},
         {"column": "legacy_batch_id",               "type": "bigint",    "nullable": "YES", "max_length": None},
         {"column": "legacy_report_id",              "type": "bigint",    "nullable": "YES", "max_length": None},
-        {"column": "migrated_flag",                 "type": "char",      "nullable": "YES", "max_length": 1},
+        {"column": "migrated_flag",                 "type": "char",      "nullable": "YES", "max_length": 1,"values":['Y', 'N']},
         {"column": "legacy_re_id",                  "type": "nvarchar",  "nullable": "YES", "max_length": 20},
         {"column": "job id ",                       "type": "nvarchar",  "nullable": "YES", "max_length": 20},
         {"column": "rcd_create date",               "type": "datetime2", "nullable": "YES", "max_length": None},
@@ -264,10 +264,10 @@ SCHEMA: dict[str, list[dict]] = {
         {"column": "UNIQUECOMPANYIDNUMBER",         "type": "varchar",   "nullable": "YES", "max_length": 50},
         {"column": "identifierNonAvailability",     "type": "nvarchar",  "nullable": "YES", "max_length": 50},
         {"column": "kycFormatCode",                 "type": "nvarchar",  "nullable": "YES", "max_length": 10},
-        {"column": "reportType",                    "type": "nvarchar",  "nullable": "YES", "max_length": 50},
+        {"column": "reportType",                    "type": "nvarchar",  "nullable": "YES", "max_length": 50,"values":['STR', 'CTR', 'NTR', 'CBWT']},
         {"column": "otherIdentifierName",           "type": "nvarchar",  "nullable": "YES", "max_length": 100},
         {"column": "otherIdentifierNumber",         "type": "nvarchar",  "nullable": "YES", "max_length": 100},
-        {"column": "individualDetailsNotAvailable", "type": "nvarchar",  "nullable": "YES", "max_length": 5},
+        {"column": "individualDetailsNotAvailable", "type": "nvarchar",  "nullable": "YES", "max_length": 5,"values":['Y', 'N']},
         {"column": "soleProprietorFirm",            "type": "varchar",   "nullable": "YES", "max_length": 255},
         {"column": "ucicOwnerOfSoleProprietorFirm", "type": "varchar",   "nullable": "YES", "max_length": 255},
         {"column": "nameOwnerOfSoleProprietorFirm", "type": "nvarchar",  "nullable": "YES", "max_length": 302},
@@ -277,7 +277,7 @@ SCHEMA: dict[str, list[dict]] = {
     # "fingate_AnotherTable": [ ... ],
 }
 
-# ── Per-table DB schema qualifiers ────────────────────────────────────────────
+# Per-table DB schema qualifiers
 TABLE_QUALIFIERS: dict[str, str] = {
     "fingate_CbwtrBank": "FINCORE_BRIDGE",
     "fingate_Gos":       "FINCORE_BRIDGE",
@@ -297,13 +297,13 @@ DEFAULT_QUALIFIER = "FINCORE_BRIDGE"
 SCHEMA_QUALIFIER = None  
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+###############################################################################
 #  METADATA — business meaning for every column (used by the prompt + indexing)
-# ══════════════════════════════════════════════════════════════════════════════
+###############################################################################
 
 COLUMN_META: dict[str, dict] = {
 
-    # ── fingate_CbwtrBank ─────────────────────────────────────────────────────
+    # fingate_CbwtrBank
 
     "fingate_CbwtrBank.transactionId": {
         "alias":       "transaction ID",
@@ -312,10 +312,10 @@ COLUMN_META: dict[str, dict] = {
     },
     "fingate_CbwtrBank.transactionDate": {
         "alias":       "transaction date",
-        "description": "Date and time when the wire transaction was initiated",
-        "tags":        ["date", "when", "timestamp", "time"],
+        "description": "Date when the wire transaction was initiated",
+        "tags":        ["date", "when"],
     },
-    "fingate_CbwtrBank.trasactionTime": {   # note: typo in original DDL preserved
+    "fingate_CbwtrBank.transactionTime": {   # note: typo in original DDL preserved
         "alias":       "transaction time",
         "description": "Time component of the transaction (separate from date)",
         "tags":        ["time", "hour", "when"],
@@ -516,7 +516,7 @@ COLUMN_META: dict[str, dict] = {
         "tags":        ["batch", "ingestion", "load", "ETL"],
     },
 
-    # ── fingate_Gos ───────────────────────────────────────────────────────────
+    # fingate_Gos 
 
     "fingate_Gos.reportId": {
         "alias":       "report ID",
@@ -634,7 +634,7 @@ COLUMN_META: dict[str, dict] = {
         "tags":        ["not available", "missing", "flag", "Y/N"],
     },
 
-    # ── finnet_Currency ───────────────────────────────────────────────────────
+    # finnet_Currency 
 
     "finnet_Currency.id_": {
         "alias":       "currency record ID",
@@ -667,7 +667,7 @@ COLUMN_META: dict[str, dict] = {
         "tags":        ["country", "code", "ISO", "lookup"],
     },
 
-    # ── finnet_Country ────────────────────────────────────────────────────────
+    # finnet_Country 
 
     "finnet_Country.id_": {
         "alias":       "country record ID",
@@ -701,7 +701,7 @@ COLUMN_META: dict[str, dict] = {
     },
 
 
-    # ── fingate_KycSummary ────────────────────────────────────────────────────
+    # fingate_KycSummary 
 
     "fingate_KycSummary.primaryEntity": {
         "alias":       "primary entity flag",
@@ -776,7 +776,7 @@ COLUMN_META: dict[str, dict] = {
     "fingate_KycSummary.REPORTDATASETID": {"alias": "report dataset ID", "description": "Groups all records belonging to the same report submission dataset.", "tags": ["dataset", "report group", "submission"]},
     "fingate_KycSummary.REPORTREFERENCENO":{"alias": "report reference number", "description": "Human-readable reference number of the STR/CTR report as assigned by the reporting institution.", "tags": ["reference number", "STR ref", "CTR ref", "report number", "institution reference"]},
 
-    # ── fingate_AccountPerson ─────────────────────────────────────────────────
+    # fingate_AccountPerson 
 
     "fingate_AccountPerson.accountNo": {
         "alias":       "account number",
@@ -821,7 +821,7 @@ COLUMN_META: dict[str, dict] = {
         "tags":        ["report type", "STR", "CTR", "NTR", "CBWT", "FIU-IND", "regulatory report", "filing type"],
     },
 
-    # ── fingate_AccountDetail ─────────────────────────────────────────────────
+    # fingate_AccountDetail 
 
     "fingate_AccountDetail.batchId":     {"alias": "batch ID", "description": "ETL ingestion batch for this account record.", "tags": ["batch", "ETL", "ingestion"]},
     "fingate_AccountDetail.reportId":    {"alias": "report ID", "description": "Links to the parent STR/CTR filing in FINgate.", "tags": ["report", "STR", "CTR", "FIU-IND"]},
@@ -866,7 +866,7 @@ COLUMN_META: dict[str, dict] = {
     "fingate_AccountDetail.legacy_re_id":    {"alias": "legacy reporting entity ID", "description": "RE code from legacy system.", "tags": ["legacy", "RE"]},
     "fingate_AccountDetail.job_id":          {"alias": "ETL job ID", "description": "Processing job that created or updated this record.", "tags": ["ETL", "job", "pipeline"]},
     "fingate_AccountDetail.rcd_create_date": {"alias": "record creation timestamp", "description": "Datetime this record was first created in FINgate.", "tags": ["created", "timestamp", "audit"]},
-    "fingate_AccountDetail.rcd_upd d_update_date": {"alias": "record last updated timestamp", "description": "Datetime of most recent update. Note: column name has a typo (space) preserved from DDL.", "tags": ["updated", "timestamp", "audit", "DDL typo"]},
+    "fingate_AccountDetail.rcd_update_date": {"alias": "record last updated timestamp", "description": "Datetime of most recent update. Note: column name has a typo (space) preserved from DDL.", "tags": ["updated", "timestamp", "audit", "DDL typo"]},
     "fingate_AccountDetail.noofCashTxn": {
         "alias":       "number of cash transactions",
         "description": "Count of cash transactions on this account in the reporting period. High cash transaction counts are a primary CTR trigger (>INR 10L/day per PMLA) and structuring indicator.",
@@ -910,7 +910,7 @@ COLUMN_META: dict[str, dict] = {
     "fingate_AccountDetail.reportRefNo":  {"alias": "report reference number", "description": "Institution-assigned STR/CTR reference number.", "tags": ["report reference", "STR", "CTR"]},
     "fingate_AccountDetail.reportType":   {"alias": "report type (STR/CTR/NTR/CBWT)", "description": "Regulatory report type filed with FIU-IND.", "tags": ["STR", "CTR", "NTR", "CBWT", "report type"]},
 
-    # ── fingate_EntityDetail ──────────────────────────────────────────────────
+    # fingate_EntityDetail 
 
     "fingate_EntityDetail.ucic": {
         "alias":       "UCIC — Unique Customer Identification Code",
@@ -1110,13 +1110,13 @@ COLUMN_META: dict[str, dict] = {
         "tags":        ["primary entity", "STR subject", "primary vs related party", "filing subject"],
     },
 
-    # ── Add metadata for remaining tables below in the same format ────────────
+    #  Add metadata for remaining tables below in the same format 
 }
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+#######################################
 #  HELPERS  (used by pipeline and app)
-# ══════════════════════════════════════════════════════════════════════════════
+#######################################
 
 def get_all_tables() -> list[str]:
     return list(SCHEMA.keys())
@@ -1129,14 +1129,20 @@ def get_qualifier(table: str) -> str:
 
 def get_inline_comments(table: str) -> dict[str, str]:
     """
-    Returns {table.column: alias} for schema_to_ddl inline comment injection.
+    Returns {table.column: alias | values } for schema_to_ddl inline comment injection.
     Only includes columns that have metadata defined.
     """
+
     out = {}
     for col in SCHEMA.get(table, []):
         key = f"{table}.{col['column']}"
         if key in COLUMN_META:
-            out[key] = COLUMN_META[key]["alias"]
+            meta = COLUMN_META[key]
+            comment = meta["alias"]
+            if "values" in meta:
+                vals = ", ".join(f"'{v}'" for v in meta["values"])
+                comment += f" | values: {vals}"
+            out[key] = comment
     return out
 
 
