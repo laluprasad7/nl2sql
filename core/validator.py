@@ -11,7 +11,6 @@ import sqlglot.expressions as exp
 
 # Keywords that must never appear in analyst queries.
 # Includes T-SQL write/DDL verbs plus DuckDB-specific statements that could
-# read/write the filesystem or load extensions (ATTACH, COPY, INSTALL, …).
 _BLOCKED_KEYWORDS = {
     "INSERT", "UPDATE", "DELETE", "DROP", "ALTER",
     "TRUNCATE", "CREATE", "EXEC", "EXECUTE", "GRANT",
@@ -42,21 +41,18 @@ def validate_sql(
 
     sql = sql.strip()
 
-    # ── 1. Strip markdown fences the model might wrap around the SQL ──────────
+    # 1. Strip markdown fences the model might wrap around the SQL 
     sql = re.sub(r"^```(?:sql)?\s*", "", sql, flags=re.IGNORECASE)
     sql = re.sub(r"\s*```$", "", sql)
     sql = sql.strip()
 
-    # ── 2. Keyword blocklist (fast, pre-parse) ────────────────────────────────
+    # 2. Keyword blocklist (fast, pre-parse) 
     tokens = set(re.findall(r"\b[A-Z_]+\b", sql.upper()))
     blocked = tokens & _BLOCKED_KEYWORDS
     if blocked:
         return False, f"Query contains disallowed keyword(s): {', '.join(sorted(blocked))}."
 
-    # ── 3. Parse with sqlglot (T-SQL dialect) ────────────────────────────────
-    # Catch the SqlglotError base class — covers ParseError *and* TokenError
-    # (e.g. an unbalanced quote from stray prose), so a malformed model output
-    # becomes a clean rejection the retry loop can handle instead of a crash.
+    # 3. Parse with sqlglot (T-SQL dialect) 
     try:
         statements = sqlglot.parse(sql, dialect="tsql")
     except sqlglot.errors.SqlglotError as exc:
@@ -71,15 +67,13 @@ def validate_sql(
 
     parsed = statements[0]
 
-    # ── 4. Must be a SELECT ───────────────────────────────────────────────────
+    # 4. Must be a SELECT
     if not isinstance(parsed, exp.Select):
         kind = type(parsed).__name__
         return False, f"Only SELECT statements are allowed (got {kind})."
 
-    # ── 5. Table allowlist ────────────────────────────────────────────────────
+    # 5. Table allowlist 
     if allowed_tables is not None:
-        # CTE names (WITH foo AS …) appear as table references but are virtual,
-        # so exclude them from the allowlist check.
         cte_names = {
             c.alias_or_name.upper()
             for c in parsed.find_all(exp.CTE)
