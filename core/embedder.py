@@ -32,28 +32,33 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import warnings
+warnings.filterwarnings("ignore", message=".*torchvision.*")
 import chromadb
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"  
+os.environ["CHROMA_TELEMETRY"] = "false"
 
 if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 
 log = logging.getLogger(__name__)
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
+# Paths 
 _BASE_DIR    = Path(__file__).resolve().parent.parent   # project root
 CHROMA_DIR   = _BASE_DIR / "data" / "chroma_index"
 FINGERPRINT_FILE = CHROMA_DIR / "schema_fingerprint.json"
 COLLECTION_NAME  = "schema_columns"
 
-# ── Module-level singletons (loaded once per process) ─────────────────────────
+# Module-level singletons (loaded once per process) 
 _chroma_client:     chromadb.PersistentClient | None = None
 _collection:        chromadb.Collection       | None = None
 _embed_model:       SentenceTransformer       | None = None
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+####################
 #  Embedding model
-# ══════════════════════════════════════════════════════════════════════════════
+####################
 
 def _get_embed_model() -> "SentenceTransformer":
     """Load all-MiniLM-L6-v2 once and cache it in the module global."""
@@ -72,9 +77,9 @@ def _embed(texts: list[str]) -> list[list[float]]:
     return model.encode(texts, show_progress_bar=False).tolist()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+#############################################################
 #  Schema fingerprint — detects when COLUMN_META has changed
-# ══════════════════════════════════════════════════════════════════════════════
+#############################################################
 
 def _compute_fingerprint(column_meta: dict) -> str:
     """SHA256 of the sorted COLUMN_META dict — stable across Python restarts."""
@@ -93,9 +98,9 @@ def _write_fingerprint(fp: str) -> None:
     FINGERPRINT_FILE.write_text(json.dumps({"fingerprint": fp}))
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+######################
 #  Index construction
-# ══════════════════════════════════════════════════════════════════════════════
+######################
 
 def _build_documents(column_meta: dict) -> tuple[list[str], list[str], list[dict]]:
     """
@@ -154,9 +159,9 @@ def _build_index(column_meta: dict, client: chromadb.PersistentClient) -> chroma
     return collection
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+##############################################
 #  Startup — called once when the app starts
-# ══════════════════════════════════════════════════════════════════════════════
+##############################################
 
 def initialise(column_meta: dict | None = None) -> str:
     """
@@ -201,9 +206,9 @@ def initialise(column_meta: dict | None = None) -> str:
     return "built"
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+#################################################
 #  Query — the function the app calls at runtime
-# ══════════════════════════════════════════════════════════════════════════════
+#################################################
 
 def suggest_tables(
     question: str,
@@ -231,9 +236,6 @@ def suggest_tables(
     RuntimeError if initialise() has not been called yet.
     """
     if _collection is None:
-        # Self-heal: a hot reload can re-import this module (resetting the
-        # globals) while the cached startup init no longer re-runs. Re-attaching
-        # to the on-disk index is cheap (fingerprint matches → no rebuild).
         initialise()
 
     # Embed the question
