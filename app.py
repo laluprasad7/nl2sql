@@ -1,5 +1,5 @@
 """
-CBWT Query Studio — Streamlit frontend
+CBWTR Query Studio — Streamlit frontend
 Run:  streamlit run app.py
 
 No live database: tables are loaded from spreadsheets in data/excel and queried
@@ -14,7 +14,7 @@ import csv
 import getpass
 
 st.set_page_config(
-    page_title="CBWT Query Studio",
+    page_title="CBWTR Query Studio",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -26,7 +26,7 @@ from core.llm import check_ollama
 from core.pipeline import run_query_pipeline
 from core.schema import schema_summary
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
+# CSS 
 st.markdown("""
 <style>
 [data-testid="stSidebar"] { min-width: 330px; max-width: 400px; }
@@ -51,21 +51,18 @@ for k, v in {
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ALL_TABLES = static_schema.get_all_tables()
 ALL_TABLES = [r["table"] for r in db.load_report() if not r["error"]]
 
 
 # Embedding index (loads MiniLM + builds/loads Chroma; cached once)
 @st.cache_resource(show_spinner="Preparing semantic table search…")
 def _init_embedder() -> str:
-    return embedder.initialise(static_schema.COLUMN_META)
+    try:
+        status = embedder.initialise(static_schema.COLUMN_META)
+        return True, status
+    except Exception as exc:          # noqa: BLE001
+        return False, str(exc)
 
-EMBED_OK = True
-try:
-    _embed_status = _init_embedder()
-except Exception as exc:  # noqa: BLE001 — suggestions are optional, degrade gracefully
-    EMBED_OK = False
-    _embed_status = str(exc)
 
 
 def log_history_to_csv(record, filename="query_history.csv"):
@@ -78,49 +75,50 @@ def log_history_to_csv(record, filename="query_history.csv"):
             writer.writeheader()
         writer.writerow(record)
 
-# ═════════════════════════════════════════════════════════════════════════════
 #  SIDEBAR
-# ═════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.title("⚙️ Configuration")
 
-    # ── Data status (replaces the old DB connection test) ──────────────────
-    st.subheader("Data")
+    
+    # Data & Model Status 
+    st.subheader("Data & Model")
+    
     report = db.load_report()
     loaded   = [r for r in report if not r["error"]]
     missing  = [r for r in report if r["error"]]
     total_rows = sum(r["rows"] for r in loaded)
-    st.caption(
-        f"{len(loaded)}/{len(report)} tables loaded"
-        # f"(DuckDB, in-memory)"
-    )
+    
+    st.caption(f"{len(loaded)}/{len(report)} tables loaded")
+    
     if missing:
         with st.expander(f"⚠️ {len(missing)} table(s) not loaded", expanded=False):
             for r in missing:
                 st.write(f"`{r['table']}` — {r['error']}")
             st.caption(f"Drop spreadsheets in: `{settings.EXCEL_DIR}`")
-    if st.button("🔄 Reload data", use_container_width=True):
-        with st.spinner("Reloading spreadsheets…"):
-            db.reload()
-        st.rerun()
 
-    # ── Ollama check ───────────────────────────────────────────────────────
-    st.subheader("Model")
-    if st.button("Check model", use_container_width=True):
-        with st.spinner("Checking…"):
-            ok, msg = check_ollama()
-        if ok:
-            st.success(f"Ready: `{msg}`")
-        else:
-            st.error(msg)
+    action_col1, action_col2 = st.columns(2)
+
+    with action_col1:
+        if st.button("Reload data", use_container_width=True):
+            with st.spinner("Reloading…"):
+                db.reload()
+            st.rerun()
+
+    with action_col2:
+        if st.button("Check model", use_container_width=True):
+            with st.spinner("Checking…"):
+                ok, msg = check_ollama()
+            if ok:
+                st.success(f"Ready: `{msg}`")
+            else:
+                st.error(msg)
 
     st.divider()
 
-    # ── Table selector ─────────────────────────────────────────────────────
+    #Table selector 
     st.subheader("Tables in context")
     st.caption(f"{len(ALL_TABLES)} tables available")
 
-    # Callbacks — write directly to the widget's own key
     def _select_all():
         st.session_state["table_multiselect"] = list(ALL_TABLES)
 
@@ -134,8 +132,8 @@ with st.sidebar:
     
     
     c1, c2 = st.columns(2)
-    c1.button("All",   use_container_width=True, on_click=_select_all)
-    c2.button("Clear", use_container_width=True, on_click=_clear_all)
+    c1.button("All",   width='stretch', on_click=_select_all)
+    c2.button("Clear", width='stretch', on_click=_clear_all)
 
     selected_tables: list[str] = st.multiselect(
         "Tables",
@@ -151,7 +149,7 @@ with st.sidebar:
 
     st.divider()
 
-    # ── Extra glossary ─────────────────────────────────────────────────────
+    # Extra glossary 
     with st.expander("Extra glossary hints", expanded=False):
         st.caption(
             "Add any extra hints here (e.g. country code mappings, business rules)."
@@ -164,7 +162,7 @@ with st.sidebar:
             label_visibility="collapsed",
         )
 
-    # ── History ────────────────────────────────────────────────────────────
+    # History 
     if st.session_state.history:
         st.divider()
         st.subheader("History")
@@ -178,12 +176,31 @@ with st.sidebar:
                     st.error(h["error"])
 
 
-# ═════════════════════════════════════════════════════════════════════════════
+###########
 #  MAIN
-# ═════════════════════════════════════════════════════════════════════════════
-st.title("🔍 CBWT Query Studio")
+###########
+st.title("🔍 CBWTR Query Studio")
 st.caption("Ask — SQL is generated and run locally")
 
+# Standard Questions 
+STANDARD_QUESTIONS = [
+    "Show me all wire transfers where the amount in INR is more than 50 lakhs in the last 90 days,which is origineted from china,uae,usa, to india",
+    "List all transactions where the sender bank BIC is not available or is blank",
+    "Show me all entities whose KYC has not been refreshed in the last 2 years",
+    "Give me all companies where UBO details are not available and their risk level is high",
+    "Give me all GOS records where the attempted transaction flag is yes and status is still pending"
+]
+
+def _set_question(q: str):
+    st.session_state["question"] = q
+
+label_col, icon_col = st.columns([15, 1], vertical_alignment="bottom")
+
+with icon_col:
+    with st.popover("💡", help="Standard questions", use_container_width=True):
+        st.markdown("**Quick Questions**")
+        for sq in STANDARD_QUESTIONS:
+            st.button(sq, on_click=_set_question, args=(sq,), width='stretch')
 question = st.text_area(
     "Your question",
     key="question",
@@ -195,39 +212,53 @@ question = st.text_area(
     height=100,
 )
 
-# ── Semantic table suggestions (reactive) ──────────────────────────────────────
-if EMBED_OK and question.strip():
-    try:
-        scored = embedder.suggest_tables_with_scores(question.strip(), max_tables=len(ALL_TABLES))
-        scored = [(t, s) for t, s in scored if t in ALL_TABLES][:3]
-    except Exception:  # noqa: BLE001
-        scored = []
-    if scored:
-        suggested = [t for t, _ in scored]
-        sug_col, btn_col = st.columns([4, 1])
-        with sug_col:
-            pills = " ".join(f"<span class='pill'>{t}</span>" for t in suggested)
-            st.markdown(f"**Suggested tables:** {pills}", unsafe_allow_html=True)
-        with btn_col:
-            st.session_state["suggested_tables"] = [t for t, _ in scored]
-            st.button(
-                "✦ Use suggested",
-                use_container_width=True,
-                on_click=_apply_suggested,
+# Semantic table suggestions (reactive)
+scored = []
+if question.strip():
+    with st.spinner("Initialising search index (first time only)…"):
+        _embed_ok, _embed_msg = _init_embedder()
+    if _embed_ok:
+        try:
+            scored = embedder.suggest_tables_with_scores(
+                question.strip(), max_tables=len(ALL_TABLES)
             )
-        with st.expander("Confidence", expanded=False):
-            max_score = max(s for _, s in scored) or 1.0
-            for t, s in scored:
-                st.write(f"`{t}`")
-                st.progress(min(max(s / max_score, 0.0), 1.0))
+            max_score = max((s for _, s in scored), default=1.0) or 1.0
+            scored = [
+                (t, s) for t, s in scored
+                if t in ALL_TABLES and s >= max_score / 2
+            ][:5]
+        except Exception:              # noqa: BLE001
+            scored = []
+ 
+if scored:
+    # Save to session state BEFORE the button renders so _apply_suggested
+    # always has a valid list (fixes the KeyError on very first click)
+    st.session_state["suggested_tables"] = [t for t, _ in scored]
+    sug_col, btn_col = st.columns([4, 1])
+    with sug_col:
+        pills = " ".join(f"<span class='pill'>{t}</span>" for t in st.session_state["suggested_tables"])
+        st.markdown(f"**Suggested tables:** {pills}", unsafe_allow_html=True)
+    with btn_col:
+        st.button(
+            "✦ Use suggested",
+            width='stretch',
+            on_click=_apply_suggested,
+        )
+    with st.expander("Confidence", expanded=False):
+        max_score = max((s for _, s in scored), default=1.0) or 1.0
+        for t, s in scored:
+            st.write(f"`{t}`")
+            st.progress(min(max(s / max_score, 0.0), 1.0))
 
+
+ 
 btn_col, hint_col = st.columns([1, 4])
-run_clicked = btn_col.button("▶  Run", type="primary", use_container_width=True)
+run_clicked = btn_col.button("▶  Run", type="primary", width='stretch')
 
 if not selected_tables:
     hint_col.warning("Select at least one table in the sidebar.")
 
-# ── Execute ───────────────────────────────────────────────────────────────────
+# Execute 
 if run_clicked and question.strip() and selected_tables:
     with st.status("Generating SQL…", expanded=True) as status_box:
         st.write("Waiting for response..")
@@ -299,12 +330,12 @@ if run_clicked and question.strip() and selected_tables:
             file_name="results.csv",
             mime="text/csv",
         )
-        st.dataframe(df, use_container_width=True, height=420)
+        st.dataframe(df, width='stretch', height=420)
 
         num_cols = df.select_dtypes(include="number").columns.tolist()
         if num_cols:
             with st.expander("Numeric summary"):
-                st.dataframe(df[num_cols].describe(), use_container_width=True)
+                st.dataframe(df[num_cols].describe(), width='stretch')
 
 elif run_clicked and not question.strip():
     st.warning("Please enter a question.")
@@ -316,7 +347,7 @@ elif st.session_state.last_result and not run_clicked:
         st.code(r.sql, language="sql")
     if r.dataframe is not None:
         st.subheader(f"Last results — {len(r.dataframe):,} row(s)")
-        st.dataframe(r.dataframe, use_container_width=True, height=380)
+        st.dataframe(r.dataframe, width='stretch', height=380)
 
 st.divider()
 st.caption("Read-only · MAX 500 rows · Validated & transpiled before execution .")
