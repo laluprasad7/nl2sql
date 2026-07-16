@@ -12,67 +12,102 @@ import json
 import requests
 from config import settings
 
-# ── Prompt templates ──────────────────────────────────────────────────────────
+# Prompt templates 
 
 _SYSTEM = """\
-You are an expert Microsoft SQL Server (T-SQL) query writer for a \
-cross-border wire transaction (CBWT) financial intelligence database.
-
-STRICT RULES — follow every one, no exceptions:
-1. Output ONLY the raw T-SQL SELECT query. No explanation, no markdown fences, \
-no preamble, no comments unless asked.
-2. Never use SELECT *. Always name columns explicitly.
+You are an expert T-SQL analyst for a financial intelligence unit (FIU-IND) \
+that monitors cross-border wire transactions (CBWTR) for money laundering, \
+terrorist financing, and other financial crimes under PMLA and FATF guidelines.
+ 
+OUTPUT RULES — non-negotiable
+════════════════════════════════════════════════
+1. Output ONLY the raw T-SQL SELECT query. No explanation, no markdown fences,
+   no preamble, no trailing comments.
+2. Never use SELECT *. Always name every column explicitly.
 3. Never write INSERT, UPDATE, DELETE, DROP, ALTER, EXEC, or TRUNCATE.
-4. Use table aliases (e.g. t, txn, snd) to keep queries readable.
-5. For date filtering use CAST(col AS DATE) comparisons or DATEADD/DATEDIFF \
-— never string literals for dates.
-6. When the user asks for "last month" use:
-   MONTH(col) = MONTH(DATEADD(MONTH,-1,GETDATE()))
-   AND YEAR(col)  = YEAR(DATEADD(MONTH,-1,GETDATE()))
-7. Monetary amounts in this database are stored in minor units \
-(divide by 100.0 to get the display value) UNLESS the column name \
-ends in _USD or _AMT_DC, which are already in major units.
-8. If the question is ambiguous, write the most reasonable interpretation.
-9. Use ONLY the exact table names listed under ALLOWED TABLES. NEVER invent, \
-guess, or use placeholder table names such as YOUR_TABLE, your_transaction_table, \
-table_name, transactions, or any name not in that list.
-10. If none of the ALLOWED TABLES can answer the question, reply with exactly: \
-CANNOT_ANSWER (do not substitute a made-up table to force an answer).
-"""
+4. Use short, readable table aliases (e.g. txn, ent, acc, kyc, ctr, gos).
+ 
 
+TABLE SELECTION RULES
+════════════════════════════════════════════════
+5. The schema block below may contain several tables the analyst pre-selected.
+   USE ONLY the tables whose columns are actually needed to answer the question.
+   IGNORE all other tables in the schema block entirely — do not JOIN or
+   reference a table just because it appears in the schema.
+6. The ALLOWED TABLES block is the complete list of tables you may reference.
+   Do not use any table that is not explicitly listed there, even if it appears
+   in the schema block or in prior examples. Never invent, guess, or use a table
+   name that is not listed under ALLOWED TABLES. If you cannot answer from the
+   allowed tables, reply with exactly: CANNOT_ANSWER
+7. To resolve country codes → names: JOIN [FIUMetaHub].[finnet_Country] fc ON t.{col} = fc.id_  use fc.name for display
+   To resolve currency codes → names: JOIN [FIUMetaHub].[finnet_Currency] cur ON t.{col} = cur.id_ use cur.name or cur.currencyCode for display
+   IMPORTANT: do not guess any contry code use the mapping, name to code and code name from these tables 
+ 
+════════════════════════════════════════════════
+JOIN RULES — use only allowed tables
+════════════════════════════════════════════════
+8. Only join tables that appear in the ALLOWED TABLES block.
+9. If the question can be answered with a single allowed table, do not add any
+   joins. If enrichment is needed, use only other allowed tables and keep the
+   join path simple and directly relevant to the question.
+
+ 
+DATE AND AMOUNT RULES
+════════════════════════════════════════════════
+10.  For "last month": MONTH(col) = MONTH(DATEADD(MONTH,-1,GETDATE()))
+                  AND YEAR(col)  = YEAR(DATEADD(MONTH,-1,GETDATE()))
+11. For "last N days": CAST(col AS DATE) >= CAST(DATEADD(DAY,-N,GETDATE()) AS DATE)
+12. Never filter dates using string literals like '2024-01-01'.
+13. amountInInr is in full rupee units (NOT minor units) — do not divide.
+    For display
+
+ENUM / FLAG VALUE RULES
+════════════════════════════════════════════════
+14. Use ONLY the exact values shown in the column comments (after "values:").
+    Examples:
+      accountStatus → 'Active', 'Dormant', 'Frozen', 'Closed'  (NOT 'active')
+      risk / customerRiskLevel:'Low', 'Medium', 'High', 'Very High'
+      migrated_flag: 'Y', 'N'   (NOT 'Yes', 'YES', 'yes', 1, true)
+      reportType:'STR', 'CTR', 'NTR', 'CBWT'
+    When in doubt, match the case shown in the column comment exactly.
+
+
+15. If the question is ambiguous, write the most analytically useful
+    interpretation for a financial crime investigator.
+"""
 _SCHEMA_BLOCK = """\
--- DATABASE SCHEMA (only the tables relevant to this question) --
+-- DATABASE SCHEMA (tables pre-selected by the analyst; use only what is needed) --
 {ddl}
 """
-
+ 
 _ALLOWED_BLOCK = """\
--- ALLOWED TABLES (use ONLY these exact names; inventing any other is an error) --
+-- ALLOWED TABLES (use ONLY these exact qualified names; ignore all others) --
 {tables}
 """
-
+ 
 _GLOSSARY_BLOCK = """\
--- BUSINESS GLOSSARY (map plain-English terms → column/table names) --
+-- BUSINESS GLOSSARY (plain-English terms → column/table names) --
 {glossary}
 """
-
+ 
 _QUESTION_BLOCK = """\
--- USER QUESTION --
+-- ANALYST QUESTION --
 {question}
 """
-
+ 
 _RETRY_PREFIX = """\
-The previous SQL you generated was rejected with this error:
+Your previous SQL was rejected with this error:
   {error}
-
+ 
 Fix ONLY what caused the error. Output the corrected T-SQL query only.
-
+ 
 Previous attempt:
 {previous_sql}
-
+ 
 """
 
 
-# ── Ollama helpers ────────────────────────────────────────────────────────────
+# Ollama helpers 
 
 def check_ollama() -> tuple[bool, str]:
     """Return (True, model_name) if Ollama is reachable and the model is pulled."""
@@ -106,19 +141,30 @@ def _call_ollama(prompt: str) -> str:
         "stream": False,
         "options": {
             "temperature": 0.0,   # deterministic for SQL
-            "num_predict": 512,
+            "num_predict": 520,
         },
     }
     r = requests.post(
         f"{settings.OLLAMA_BASE_URL}/api/generate",
         json=payload,
-        timeout=120,
+        timeout=180,
     )
     r.raise_for_status()
+    parts: list[str] = []
+    for raw_line in r.iter_lines():
+        if not raw_line:
+            continue
+        try:
+            chunk = json.loads(raw_line)
+        except json.JSONDecodeError:
+            continue
+        parts.append(chunk.get("response", ""))
+        if chunk.get("done"):
+            break
     return r.json().get("response", "").strip()
 
 
-# ── Main generation function ──────────────────────────────────────────────────
+# Main generation function 
 
 def generate_sql(
     question: str,
@@ -183,8 +229,6 @@ def generate_sql(
     sql = re.sub(r"\s*```$", "", sql).strip()
 
     # The model sometimes prepends a sentence of explanation despite the rules.
-    # Stray prose (e.g. an apostrophe in "haven't") breaks the tokenizer, so trim
-    # everything before the first line that starts with SELECT or WITH.
     m = re.search(r"(?im)^\s*(WITH|SELECT)\b", sql)
     if m:
         sql = sql[m.start():].strip()
