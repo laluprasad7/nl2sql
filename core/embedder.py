@@ -192,6 +192,7 @@ def initialise(column_meta: dict | None = None) -> str:
         # Schema unchanged — reuse existing collection
         try:
             _collection = _chroma_client.get_collection(COLLECTION_NAME)
+            _get_embed_model()
             log.info(
                 "Schema index loaded from disk (%d vectors).",
                 _collection.count(),
