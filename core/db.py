@@ -149,9 +149,9 @@ def load_report() -> list[dict]:
     return _LOAD_REPORT or []
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+###################
 #  Query execution
-# ══════════════════════════════════════════════════════════════════════════════
+###################
 
 def _ensure_limit(duck_sql: str) -> str:
     """Append LIMIT settings.MAX_ROWS to the outer query if none is present."""
